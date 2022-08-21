@@ -1,70 +1,49 @@
-# Getting Started with Create React App
+# Serving React with Express using HTTPS on localhost
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+This is a demonstration of serving a React app over HTTPS using Express. Don't use this security pattern in production. The SSL certificate, encrypted key, decrypted key, and passphrase are included in this repository, but should not be for real applications.
 
-## Available Scripts
+## Installation
 
-In the project directory, you can run:
+Clone the repository and install the dependencies in `./backend` and `./frontend` by running `npm i` in each directory.
 
-### `npm start`
+## Create a build
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+Run `./build.sh`. This script will use the `build` script from `create-react-app` to create a production build of a React app and then copy it into the `./backend/public` folder where it will be served from.
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+## Generate your own SSL certificate and key
 
-### `npm test`
+The included SSL certificate, keys, and passphrase were generated using OpenSSL. These should allow the application to run without any manual effort. If you wish, you can use the instructions below to generate your own files.
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+- Ensure OpenSSL is installed: `which openssl`
 
-### `npm run build`
+  - If it is not, install it with Homebrew: `brew install openssl`
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+- In the backend directory (`./backend`), run the following to create your certificate (`cert.pem`) and encrypted key (`keytmp.pem`):
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+  ```
+  openssl req -x509 -newkey rsa:2048 -keyout keytmp.pem -out cert.pem -days 365
+  ```
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+  - You will be asked to enter a PEM pass phrase, which you should save into the `PASSPHRASE` environment variable in `./env`.
 
-### `npm run eject`
+- Use the encrypted key to generate a decrypted key (`key.pem`). Enter your passphrase when prompted:
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+  ```
+  openssl rsa -in keytmp.pem -out key.pem
+  ```
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+## Run
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+`cd backend` and `npm run start:dev` to run the application. Express will listen on `8080` for `http` requests, and `8443` for `https` requests. Requests for the HTTP version of resources are upgraded to HTTPS. Check this out by visiting http://localhost:8080 and watch the redirection to https://localhost:8443.
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+## A note on local development using this code
 
-## Learn More
+Modern browsers view self-signed certificates with suspicion, as this has been a common attack vector in the past.
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+Chrome presents a `NET::ERR_CERT_INVALID` warning:
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+![Chrome v104 presenting a certificate not valid warning](chrome-connection-not-private-warning.png)
 
-### Code Splitting
+Firefox presents a `MOZILLA_PKIX_ERROR_SELF_SIGNED_CERT` warning:
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+![Firefox v103 presenting a self signed certificate warning](firefox-self-signed-cert-warning.png)
