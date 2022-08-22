@@ -24,7 +24,7 @@ The included SSL certificate, keys, and passphrase were generated using OpenSSL.
   openssl req -x509 -newkey rsa:2048 -keyout keytmp.pem -out cert.pem -days 365
   ```
 
-  - You will be asked to enter a PEM pass phrase, which you should save into the `PASSPHRASE` environment variable in `./env`.
+  - You will be asked to enter a PEM pass phrase, which you should save into the `PASSPHRASE` environment variable in `./backend/.env`.
 
 - Use the encrypted key to generate a decrypted key (`key.pem`). Enter your passphrase when prompted:
 
